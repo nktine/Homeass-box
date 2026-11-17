@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Homeass-box v3.1 "tour premium" - boitier hub Home Assistant facon appareil.
+"""Homeass-box v5 "plaque en coin blanche" - boitier hub facon Home Assistant Voice PE.
 
-Rectangle arrondi 116 x 100 mm (coins R22, rebord chanfreine) : base blanche avec
-anneau LED a la base + logo maison grave + ports, plateau superieur noir perce
-(effet tissu) servant de socle a la Voice PE (84x84x21, dessus degage),
-Pi 5 + Active Cooler en dessous. Fixation profile 2020/2040 a l'arriere,
-vis du plateau par le dessous, 4 pieds encastres.
+Plaque 190 x 104 mm, coins R28, dessus INCLINE (33 mm devant -> 45 mm arriere, ~7 degres) :
+corps 100% blanc, anneau LED qui suit la pente sur 3 cotes (diffuseur translucide),
+logo maison grave sur le dessus, Voice PE (84x84x21) posee a fleur sur un socle incline,
+Pi 5 + Active Cooler dans la baie gauche. Fixation profile 2020/2040 arriere,
+vis par le dessous, 4 pieds encastres, aucun support a l'impression.
 
 Cotes Pi 5 (modele de reference officiel RP-004882-DD, z=0 = dessus PCB) :
   USB x4 (bord x=85) y 22.30..54.66 z -3.50..16.78 ; Ethernet y 2.25..18.15 z -2.05..13.70 ;
@@ -24,46 +24,45 @@ import trimesh
 from shapely.geometry import Polygon
 
 P = dict(
-    ox=116.0, oy=100.0,                  # empreinte exterieure
-    wall=3.0, floor=3.0, h_int=26.0, r_out=22.0, chamfer=1.0,
-    base_h=29.0,
-    plate_t=3.5, plate_off=1.5, plate_chamfer=1.2,
-    bx=6.0, by=6.0, standoff_h=6.0, standoff_d=6.0, hole_m25=2.2,
+    ox=190.0, oy=104.0, r_out=28.0, wall=3.0, floor=3.0,
+    h_front=33.0, h_back=45.0,          # dessus incline (coin)
+    cav_top=29.6,                        # plafond plat de la baie Pi
+    plate_t=3.0, seat=1.4,
+    bx=97.0, by=7.0, standoff_h=6.0, standoff_d=6.0, hole_m25=2.2,
     post_d=8.0, hole_m3=4.0, floor_screw_d=3.4,
     play=0.5,
-    extrusion=20, rail=(25.0, 90.0), rail_protrude=6.5,
-    bolt_x=(40.0, 76.0), bolt_d=5.5,
-    led_z=(4.0, 6.2),
-    vent_ring=6.0, hex_af=3.5, hex_dx=4.8, hex_dy=4.157,
-    cradle=dict(rimx0=13.0, rimx1=107.0, rimy0=3.0, rimy1=97.0, rim_h=6.0, lip=12.0, lip_top=58.0),
-    voice=dict(w=84.0, h=21.0),          # position: centre dans le pocket
-    cable_hole=(55.0, 65.0, 92.0, 98.0),
-    logo=dict(cx=58.0, z0=20.0, w=14.0, h=6.5, roof=2.8, depth=0.7),
-    exhaust=(8.0, 92.0, 7.0, 27.0), hole_d=1.8, pitch=3.2,
-    back_slats=((8.0, 38.0), (78.0, 108.0), 7.0, 15.0),
-    cable_notch=(45.0, 75.0, 7.0, 14.0),
+    extrusion=20, rail=(40.0, 160.0), rail_protrude=6.5,
+    bolt_x=(60.0, 140.0), bolt_d=5.5,
+    led_band=(-4.2, -1.8),               # bande LED relative au dessus (suivant la pente)
+    vent_af=3.5, vent_dx=4.8, vent_dy=4.157, vent=(100.0, 180.0, 8.0, 96.0),
+    logo=dict(cx=140.0, cy=50.0, w=18.0, h=9.0, roof=4.0, depth=0.5),
+    voice=dict(w=84.0, h=21.0), voice_xy=(5.0, 8.0), riser=(5.0, 6.0, 89.0, 96.0),
+    cable_cut=(86.0, 90.0, 90.0, 96.0),   # puits cable Voice -> cloison (x0,x1,y0,y1)
+    part_slot=(70.0, 80.0),               # fente cloison x 91..94
+    spk=(8.0, 92.0, 8.0, 26.0), hole_d=1.8, pitch=3.2,
+    spk_part_z=(8.0, 38.0),
+    back_slats=((8.0, 40.0), (150.0, 182.0), 7.0, 15.0),
+    cable_notch=(110.0, 140.0, 7.0, 14.0),
     gpio_slot=False,
     outdir="out",
 )
 
 OX, OY = P["ox"], P["oy"]
-BASE_H = P["base_h"]
-PLATE_Z0, PLATE_Z1 = BASE_H, BASE_H + P["plate_t"]
 BX, BY = P["bx"], P["by"]
 PCB_BOT = P["floor"] + P["standoff_h"]
 PCB_TOP = PCB_BOT + 1.6
-VOICE_TOP = PLATE_Z1 + P["voice"]["h"]
-POSTS = ((6.5, 6.5), (OX - 6.5, 6.5), (6.5, OY - 6.5), (OX - 6.5, OY - 6.5))
-C = P["cradle"]
-POCKET = (C["rimx0"] + P["wall"], C["rimy0"] + P["wall"], C["rimx1"] - P["wall"], C["rimy1"] - P["wall"])
-VOICE_XY = ((POCKET[0] + POCKET[2] - P["voice"]["w"]) / 2, (POCKET[1] + POCKET[3] - P["voice"]["w"]) / 2)
+POSTS = ((97.5, 8.0), (182.5, 8.0), (97.5, 96.0), (182.5, 96.0))
+
+
+def zshell(y):
+    return P["h_front"] + (P["h_back"] - P["h_front"]) * y / OY
 
 
 def zc(z_board):
     return PCB_TOP + z_board
 
 
-def rounded_rect_pts(x0, y0, x1, y1, r, n=8):
+def rounded_rect_pts(x0, y0, x1, y1, r, n=10):
     pts = []
     for cx, cy, a0 in [(x1 - r, y1 - r, 0), (x0 + r, y1 - r, 90),
                        (x0 + r, y0 + r, 180), (x1 - r, y0 + r, 270)]:
@@ -77,23 +76,9 @@ def extrude_pts(pts, z0, z1):
     return trimesh.creation.extrude_polygon(Polygon(pts), z1 - z0).apply_translation([0, 0, z0])
 
 
-def loft(pts_a, z_a, pts_b, z_b):
-    n = len(pts_a)
-    verts = [[x, y, z_a] for x, y in pts_a] + [[x, y, z_b] for x, y in pts_b]
-    faces = []
-    for i in range(n):
-        j = (i + 1) % n
-        faces += [[i, j, n + j], [i, n + j, n + i]]
-    for i in range(1, n - 1):
-        faces += [[0, i + 1, i], [n, n + i, n + i + 1]]
-    m = trimesh.Trimesh(vertices=verts, faces=faces, process=True)
-    m.fix_normals()
-    return m
-
-
-def prism_xz(pts, y0, y1):
+def sloped_ring(pts, zb_fn, zt_fn):
     n = len(pts)
-    verts = [[x, y0, z] for x, z in pts] + [[x, y1, z] for x, z in pts]
+    verts = [[x, y, zb_fn(y)] for x, y in pts] + [[x, y, zt_fn(y)] for x, y in pts]
     faces = []
     for i in range(n):
         j = (i + 1) % n
@@ -103,6 +88,11 @@ def prism_xz(pts, y0, y1):
     m = trimesh.Trimesh(vertices=verts, faces=faces, process=True)
     m.fix_normals()
     return m
+
+
+def sloped_box(x0, x1, y0, y1, zb_fn, zt_fn):
+    pts = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+    return sloped_ring(pts, zb_fn, zt_fn)
 
 
 def mbox(x0, y0, z0, x1, y1, z1):
@@ -154,43 +144,51 @@ def cut_wall_y(s, y0, y1, x0, x1, z0, z1):
 
 def build_base():
     p = P
-    r, ch = p["r_out"], p["chamfer"]
-    base = extrude_pts(rounded_rect_pts(0, 0, OX, OY, r), 0, BASE_H - ch)
-    base = union([base, loft(rounded_rect_pts(0, 0, OX, OY, r), BASE_H - ch,
-                             rounded_rect_pts(ch, ch, OX - ch, OY - ch, r - ch), BASE_H)])
-    base = diff(base, [mbox(p["wall"], p["wall"], p["floor"], OX - p["wall"], OY - p["wall"], BASE_H + 1)])
-    standoffs = [(BX + 71.5, BY + 3.5), (BX + 13.5, BY + 3.5), (BX + 71.5, BY + 52.5), (BX + 13.5, BY + 52.5)]
+    base = sloped_ring(rounded_rect_pts(0, 0, OX, OY, p["r_out"]), lambda y: 0.0, zshell)
+    base = diff(base, [
+        mbox(94, 3, p["floor"], 187, 101, p["cav_top"] + 0.5),        # baie Pi
+        mbox(92, 1, p["cav_top"], 189, 103, p["cav_top"] + p["seat"] + 1),  # siege du couvercle
+        mbox(3, 3, p["floor"], 91, 101, zshell(101) + 1),              # baie Voice (ouverte)
+    ])
+    st = [(BX + 13.5, BY + 3.5), (BX + 71.5, BY + 3.5), (BX + 13.5, BY + 52.5), (BX + 71.5, BY + 52.5)]
     base = union([base] + [mcyl(x, y, p["floor"], p["floor"] + p["standoff_h"], p["standoff_d"] / 2)
-                           for x, y in standoffs])
+                           for x, y in st])
     base = diff(base, [mcyl(x, y, p["floor"] - 1, p["floor"] + p["standoff_h"] + 1, p["hole_m25"] / 2)
-                       for x, y in standoffs])
+                       for x, y in st])
     base = diff(base, [mcyl(x, y, -1, p["floor"] + 1, p["floor_screw_d"] / 2) for x, y in POSTS])
-    for x0 in (30.0, 40.0, 50.0, 60.0, 70.0):
-        base = diff(base, [mbox(x0, 20.0, -1, x0 + 4.0, 60.0, p["floor"] + 1)])
-    for fx, fy in [(14, 14), (OX - 14, 14), (14, OY - 14), (OX - 14, OY - 14)]:
+    for x0 in (110.0, 120.0, 130.0, 140.0, 150.0):
+        base = diff(base, [mbox(x0, 20.0, -1, x0 + 4.0, 58.0, p["floor"] + 1)])
+    for x0 in (110.0, 150.0):
+        base = diff(base, [mbox(x0, 70.0, -1, x0 + 5.0, 96.0, p["floor"] + 1)])
+    for fx, fy in [(16, 16), (OX - 16, 16), (16, OY - 16), (OX - 16, OY - 16)]:
         base = diff(base, [mcyl(fx, fy, -1, 1.5, 6.0)])
-    lz0, lz1 = p["led_z"]
-    base = cut_wall_y(base, 0, p["wall"], 2, OX - 2, lz0, lz1)
-    base = cut_wall_y(base, OY - p["wall"], OY, 2, OX - 2, lz0, lz1)
-    base = cut_wall_x(base, 0, p["wall"], 2, OY - 2, lz0, lz1)
-    base = cut_wall_x(base, OX - p["wall"], OX, 2, OY - 2, lz0, lz1)
-    usbc = (BX + 85 - 15.67 - p["play"], BX + 85 - 6.73 + p["play"])
-    base = cut_wall_y(base, 0, p["wall"], usbc[0], usbc[1], zc(-0.80) - p["play"], zc(3.16) + p["play"])
-    for bx_ in (22.55, 35.95):
-        hx = (BX + 85 - (bx_ + 3.25) - p["play"], BX + 85 - (bx_ - 3.25) + p["play"])
-        base = cut_wall_y(base, 0, p["wall"], hx[0], hx[1], zc(-0.55) - p["play"], zc(2.97) + p["play"])
+    # socle incline de la Voice
+    r = p["riser"]
+    base = union([base, sloped_box(r[0], r[2], r[1], r[3], lambda y: p["floor"],
+                                   lambda y: zshell(y) - p["voice"]["h"] - 1.0)])
+    # puits cable Voice (traverse socle + fond au niveau cloison)
+    cc = p["cable_cut"]
+    base = diff(base, [mbox(cc[0], cc[2], 0, cc[1], cc[3], zshell(101) + 1)])
+    base = cut_wall_x(base, 91, 94, p["part_slot"][0], p["part_slot"][1], 0, p["floor"] + 5)
+    # la Voice tient dans son logement (2 mm de jeu) : pas d'ergots, formes pures
+    # anneau LED suivant la pente (avant, gauche, arriere)
+    b0, b1 = p["led_band"]
+    base = diff(base, [sloped_box(2, OX - 2, -1, p["wall"] + 1, lambda y: zshell(y) + b0, lambda y: zshell(y) + b1),
+                       sloped_box(-1, p["wall"] + 1, 2, OY - 2, lambda y: zshell(y) + b0, lambda y: zshell(y) + b1),
+                       sloped_box(2, OX - 2, OY - p["wall"] - 1, OY + 1, lambda y: zshell(y) + b0, lambda y: zshell(y) + b1)])
+    # ports droit (bord x=85 de la carte -> x=182, mur x=187..190)
     eth = (BY + 2.25 - p["play"], BY + 18.15 + p["play"])
     usb = (BY + 22.30 - p["play"], BY + 54.66 + p["play"])
     base = cut_wall_x(base, OX - p["wall"], OX, eth[0], eth[1], zc(-2.05) - p["play"], zc(13.70) + p["play"])
     base = cut_wall_x(base, OX - p["wall"], OX, usb[0], usb[1], zc(-3.50) - p["play"], zc(16.78) + p["play"])
-    lg = p["logo"]
-    body = [(lg["cx"] - lg["w"] / 2, lg["z0"]), (lg["cx"] + lg["w"] / 2, lg["z0"]),
-            (lg["cx"] + lg["w"] / 2, lg["z0"] + lg["h"]), (lg["cx"] - lg["w"] / 2, lg["z0"] + lg["h"])]
-    roof = [(lg["cx"] - lg["w"] / 2 - 0.8, lg["z0"] + lg["h"]),
-            (lg["cx"] + lg["w"] / 2 + 0.8, lg["z0"] + lg["h"]),
-            (lg["cx"], lg["z0"] + lg["h"] + lg["roof"])]
-    base = diff(base, [union([prism_xz(body, -0.1, lg["depth"]), prism_xz(roof, -0.1, lg["depth"])])])
-    a0, a1, z0, z1 = p["exhaust"]
+    # ports avant : USB-C + 2 micro-HDMI
+    usbc = (BX + 6.73 - p["play"], BX + 15.67 + p["play"])
+    base = cut_wall_y(base, 0, p["wall"], usbc[0], usbc[1], zc(-0.80) - p["play"], zc(3.16) + p["play"])
+    for bx_ in (22.55, 35.95):
+        base = cut_wall_y(base, 0, p["wall"], BX + bx_ - 3.25 - p["play"], BX + bx_ + 3.25 + p["play"],
+                          zc(-0.55) - p["play"], zc(2.97) + p["play"])
+    # perforations HP Voice : gauche, avant, cloison
+    a0, a1, z0, z1 = p["spk"]
     d, pitch = p["hole_d"], p["pitch"]
     perfs = []
     a = a0 + d / 2
@@ -198,9 +196,21 @@ def build_base():
         z = z0 + d / 2
         while z <= z1 - d / 2:
             perfs.append(cyl_x(-1.0, a, z, d / 2, p["wall"] + 2))
+            perfs.append(cyl_y(a, -1.0, z, d / 2, p["wall"] + 2))
             z += pitch
         a += pitch
     base = diff(base, perfs)
+    pz0, pz1 = p["spk_part_z"]
+    pperfs = []
+    a = a0 + d / 2
+    while a <= a1 - d / 2:
+        z = pz0 + d / 2
+        while z <= pz1 - d / 2:
+            pperfs.append(cyl_x(90.0, a, z, d / 2, p["wall"] + 2))
+            z += pitch
+        a += pitch
+    base = diff(base, pperfs)
+    # arriere : encoche cables + entrees d'air + rail + M5 + serrures
     cn = p["cable_notch"]
     base = cut_wall_y(base, OY - p["wall"], OY, cn[0], cn[1], cn[2], cn[3])
     sl = p["back_slats"]
@@ -214,73 +224,60 @@ def build_base():
     base = union([base, mbox(p["rail"][0], OY, rz0, p["rail"][1], OY + p["rail_protrude"], rz1)])
     for bx_ in p["bolt_x"]:
         base = diff(base, [cyl_y(bx_, OY - p["wall"] - 1, 16.4, p["bolt_d"] / 2, p["rail_protrude"] + p["wall"] + 2)])
-        base = diff(base, [cyl_y(bx_, OY - p["wall"] - 1, 24.0, 3.5, p["wall"] + 2)])
-        base = diff(base, [mbox(bx_ - 1.75, OY - p["wall"] - 1, 18.0, bx_ + 1.75, OY + 1, 24.0)])
+        base = diff(base, [cyl_y(bx_, OY - p["wall"] - 1, 20.0, 3.5, p["wall"] + 2)])
+        base = diff(base, [mbox(bx_ - 1.75, OY - p["wall"] - 1, 14.0, bx_ + 1.75, OY + 1, 20.0)])
     return base
 
 
 def build_plate():
     p = P
-    po, pc = p["plate_off"], p["plate_chamfer"]
-    x0, y0, x1, y1 = po, po, OX - po, OY - po
-    r = p["r_out"] - 2
-    plate = loft(rounded_rect_pts(x0 + 0.6, y0 + 0.6, x1 - 0.6, y1 - 0.6, r - 0.6), PLATE_Z0,
-                 rounded_rect_pts(x0, y0, x1, y1, r), PLATE_Z0 + 0.6)
-    plate = union([plate, extrude_pts(rounded_rect_pts(x0, y0, x1, y1, r), PLATE_Z0 + 0.6, PLATE_Z1 - pc)])
-    plate = union([plate, loft(rounded_rect_pts(x0, y0, x1, y1, r), PLATE_Z1 - pc,
-                                rounded_rect_pts(x0 + pc, y0 + pc, x1 - pc, y1 - pc, r - pc), PLATE_Z1)])
-    w = p["vent_ring"]
-    af, dx, dy = p["hex_af"], p["hex_dx"], p["hex_dy"]
-    ch = p["cable_hole"]
-    hexes = []
-    for rx0, ry0, rx1, ry1 in [(x0 + 0.5, y0 + 0.5, x0 + w, y1 - 0.5),
-                               (x1 - w, y0 + 0.5, x1 - 0.5, y1 - 0.5),
-                               (x0 + 0.5, y0 + 0.5, x1 - 0.5, y0 + w),
-                               (x0 + 0.5, y1 - w, x1 - 0.5, y1 - 0.5)]:
-        row = 0
-        y = ry0 + dy / 2
-        while y <= ry1:
-            off = dx / 2 if row % 2 else 0.0
-            x = rx0 + off + dx / 2
-            while x <= rx1:
-                if all((x - px) ** 2 + (y - py) ** 2 > 6.5 ** 2 for px, py in POSTS) \
-                   and not (ch[0] - 2 < x < ch[1] + 2 and ch[2] - 2 < y < ch[3] + 2) \
-                   and not (C["rimx0"] - 1 < x < C["rimx1"] + 1 and C["rimy0"] - 1 < y < C["rimy1"] + 1):
-                    hexes.append(hex_prism(x, y, PLATE_Z0 - 1, PLATE_Z1 + 1, af))
-                x += dx
-            y += dy
-            row += 1
+    x0, y0, x1, y1 = 92.2, 1.2, OX - 1.2, OY - 1.2
+    plate = sloped_ring(rounded_rect_pts(x0, y0, x1, y1, p["r_out"] - 4),
+                        lambda y: p["cav_top"], lambda y: zshell(y) - 1.0)
+    af, dx, dy = p["vent_af"], p["vent_dx"], p["vent_dy"]
+    x0v, x1v, y0v, y1v = p["vent"]
+    hexes, row, y = [], 0, y0v + dy / 2
+    while y <= y1v:
+        off = dx / 2 if row % 2 else 0.0
+        x = x0v + off + dx / 2
+        while x <= x1v:
+            if all((x - px) ** 2 + (y - py) ** 2 > 6.5 ** 2 for px, py in POSTS):
+                hexes.append(hex_prism(x, y, p["cav_top"] - 1, zshell(101) + 1, af))
+            x += dx
+        y += dy
+        row += 1
     plate = diff(plate, hexes)
-    plate = diff(plate, [mbox(ch[0], ch[2], PLATE_Z0 - 1, ch[1], ch[3], PLATE_Z1 + 1)])
-    plate = union([plate] + [mcyl(x, y, PLATE_Z0 - 6, PLATE_Z0 + 0.5, p["post_d"] / 2) for x, y in POSTS])
-    plate = diff(plate, [mcyl(x, y, PLATE_Z0 - 7, PLATE_Z0 + 1, p["hole_m3"] / 2) for x, y in POSTS])
-    c = P["cradle"]
-    w = p["wall"]
-    rim = [mbox(c["rimx0"], c["rimy0"], PLATE_Z1, c["rimx1"], c["rimy0"] + w, PLATE_Z1 + c["rim_h"]),
-           mbox(c["rimx0"], c["rimy1"] - w, PLATE_Z1, c["rimx1"], c["rimy1"], PLATE_Z1 + c["rim_h"]),
-           mbox(c["rimx0"], c["rimy0"] + w, PLATE_Z1, c["rimx0"] + w, c["rimy1"] - w, PLATE_Z1 + c["rim_h"]),
-           mbox(c["rimx1"] - w, c["rimy0"] + w, PLATE_Z1, c["rimx1"], c["rimy1"] - w, PLATE_Z1 + c["rim_h"])]
-    plate = union([plate] + rim)
-    for cx, cy in [(c["rimx0"], c["rimy0"]), (c["rimx1"] - c["lip"], c["rimy0"]),
-                   (c["rimx0"], c["rimy1"] - c["lip"]), (c["rimx1"] - c["lip"], c["rimy1"] - c["lip"])]:
-        plate = union([plate, mbox(cx, cy, VOICE_TOP, cx + c["lip"], cy + c["lip"], c["lip_top"])])
+    lg = p["logo"]
+    zt = zshell(lg["cy"]) - 1.0
+    body = [(lg["cx"] - lg["w"] / 2, lg["cy"] - lg["h"] / 2), (lg["cx"] + lg["w"] / 2, lg["cy"] - lg["h"] / 2),
+            (lg["cx"] + lg["w"] / 2, lg["cy"] + lg["h"] / 2), (lg["cx"] - lg["w"] / 2, lg["cy"] + lg["h"] / 2)]
+    roof = [(lg["cx"] - lg["w"] / 2 - 1, lg["cy"] + lg["h"] / 2), (lg["cx"] + lg["w"] / 2 + 1, lg["cy"] + lg["h"] / 2),
+            (lg["cx"], lg["cy"] + lg["h"] / 2 + lg["roof"])]
+    plate = diff(plate, [union([extrude_pts(body, zt - lg["depth"], zt + 0.5),
+                                extrude_pts(roof, zt - lg["depth"], zt + 0.5)])])
+    plate = union([plate] + [mcyl(x, y, p["cav_top"] - 6, p["cav_top"] + 0.5, p["post_d"] / 2) for x, y in POSTS])
+    plate = diff(plate, [mcyl(x, y, p["cav_top"] - 7, p["cav_top"] + 1, p["hole_m3"] / 2) for x, y in POSTS])
     if p["gpio_slot"]:
-        plate = diff(plate, [mbox(BX + 2.5, 60.0, PLATE_Z0 - 1, BX + 55.5, 66.0, PLATE_Z1 + 1)])
+        plate = diff(plate, [mbox(100.0, 61.0, p["cav_top"] - 1, 150.0, 67.0, zshell(101) + 1)])
     return plate
 
 
 def build_diffuseur():
-    z0, z1 = P["led_z"]
-    ring = extrude_pts(rounded_rect_pts(1, 1, OX - 1, OY - 1, P["r_out"] - 1), z0, z1)
-    return diff(ring, [extrude_pts(rounded_rect_pts(3, 3, OX - 3, OY - 3, P["r_out"] - 3), z0 - 1, z1 + 1)])
+    b0, b1 = P["led_band"]
+    strips = [sloped_box(4, OX - 4, 0.8, 2.2, lambda y: zshell(y) + b0, lambda y: zshell(y) + b1),
+              sloped_box(0.8, 2.2, 4, OY - 4, lambda y: zshell(y) + b0, lambda y: zshell(y) + b1),
+              sloped_box(4, OX - 4, OY - 2.2, OY - 0.8, lambda y: zshell(y) + b0, lambda y: zshell(y) + b1)]
+    return union(strips)
 
 
 def ghosts():
     v = P["voice"]
+    vx, vy = P["voice_xy"]
     return [
         mbox(BX, BY, PCB_BOT, BX + 85, BY + 56, PCB_TOP),
         mbox(BX + 20, BY + 8, PCB_TOP, BX + 70, BY + 48, PCB_TOP + 13.7),
-        mbox(VOICE_XY[0], VOICE_XY[1], PLATE_Z1, VOICE_XY[0] + v["w"], VOICE_XY[1] + v["w"], PLATE_Z1 + v["h"]),
+        sloped_box(vx, vx + v["w"], vy, vy + v["w"], lambda y: zshell(y) - v["h"] - 1.0,
+                   lambda y: zshell(y) - 1.0),
     ]
 
 

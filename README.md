@@ -1,20 +1,18 @@
 # Homeass-box — Boîtier hub Home Assistant pour imprimante 3D (Pi 5 + Voice PE)
 
-Boîtier **v3.1 « tour premium »** en 3 pièces imprimables (base blanche + plateau noir
-+ diffuseur d'anneau LED), dans le langage de design de la **Home Assistant Voice PE**
-de votre visuel : rectangle arrondi **116 × 100 mm (coins R22)**, bi-ton blanc/noir,
-**anneau LED périphérique à la base**, **logo maison gravé** en façade, parois
-chanfreinées, vis cachées par le dessous, 4 pieds caoutchouc encastrés.
+Boîtier **v5 « plaque blanche en coin »** en 3 pièces imprimables, dans le langage de la
+**Home Assistant Voice PE** de la photo de référence : plaque **190 × 104 mm**, coins **R28**,
+**dessus incliné** (33 mm devant → 45 mm arrière, ~7°), **100 % blanc**, **anneau LED qui
+suit la pente** sur 3 côtés (diffuseur translucide), **logo maison gravé sur le dessus**,
+Voice PE posée **à fleur** sur un socle incliné, Pi 5 + Active Cooler dans la baie gauche.
+Fixation profilé 2020/2040 à l'arrière, vis par le dessous, 4 pieds caoutchouc encastrés.
 
 ```
-   dessus : plateau noir à couronne perforée (effet tissu) + Voice PE (84x84x21)
-            posée dans son socle, dessus (micro/LED/bouton) dégagé
-   base   : Pi 5 nu + Active Cooler, ports, anneau LED, logo
-   arrière: rail 2020/2040 (2x écrou T M5) + sortie câbles + entrées d'air
-   dessous: 4 vis M3 (plateau) + 4 pieds + fentes d'aération
+   dessus : pente douce arriere->avant ; plateau blanc perce (hex 3,5 mm) + logo grave
+            a gauche, Voice PE (84x84x21, dessus noir) a fleur a droite
+   droite : 4x USB-A + RJ45 (cotes officielles Pi 5) | avant : USB-C + 2x micro-HDMI
+   arriere: rail 2020/2040 + 2x M5, sortie câbles, entrées d'air | dessous : vis M3, pieds
 ```
-
-Hauteur totale : **58 mm** (base 29 + plateau 3,5 + Voice 21 + ergots). Hors rail : +6,5 mm.
 
 ## Contenu / cotes
 
@@ -41,7 +39,7 @@ Paramètres en haut du fichier (`P = dict(...)`) : `extrusion`, `play` (jeu des 
 ## Impression (FDM)
 
 - **PETG** (proximité imprimante) ; PLA OK si Active Cooler actif. Buse 0,4 mm.
-- Couleurs : base **blanc/gris clair**, plateau **noir**, diffuseur **translucide**.
+- **Tout en blanc** (base + plateau), diffuseur **translucide blanc**. La Voice PE apporte seule la touche noire (son dessus), comme sur la photo de référence.
 - 0,20 mm (0,12 mm pour le couvercle et le lightbar), 3 périmètres, 20–25 % infill, 4 couches pleines.
 - **Aucun support** : base à plat, plateau imprimé à l'envers (plots et couronne vers le haut), diffuseur à plat.
 - Brim 5 mm sur la base, compensation pied d'éléphant 0,1–0,2 mm.
