@@ -1,35 +1,20 @@
 # Homeass-box — Boîtier hub Home Assistant pour imprimante 3D (Pi 5 + Voice PE)
 
-Boîtier monobloc **style premium** (v2) en 3 pièces imprimables : base + couvercle deux tons
-+ diffuseur de bandeau LED. Il remplace la coque actuelle du Pi 5 et intègre le
-**Home Assistant Voice Preview Edition** de Nabu Casa. Fixation sur le cadre de
-l'imprimante (profilé 2020/2040) ou au mur.
+Boîtier **v3.1 « tour premium »** en 3 pièces imprimables (base blanche + plateau noir
++ diffuseur d'anneau LED), dans le langage de design de la **Home Assistant Voice PE**
+de votre visuel : rectangle arrondi **116 × 100 mm (coins R22)**, bi-ton blanc/noir,
+**anneau LED périphérique à la base**, **logo maison gravé** en façade, parois
+chanfreinées, vis cachées par le dessous, 4 pieds caoutchouc encastrés.
 
 ```
-        189 mm
-  +----------------------+------------------+
-  |  BAIE VOICE (ouverte)|   BAIE PI 5      |
-  |  micro-perforations   |   carte +         |  94 mm
-  |  facon tissu, logo    |   Active Cooler   |
-  |  grave, bandeau LED   |   + couvercle     |
-  |  en base de facade    |   honeycomb fin   |
-  +----------------------+------------------+
-   avant : bandeau LED + USB-C + 2x micro-HDMI | droit : 4x USB-A + RJ45
-   arriere : rail 2020/2040 + M5, sortie câbles, entrées d'air | dessous : 4 vis M3 + 4 pieds
+   dessus : plateau noir à couronne perforée (effet tissu) + Voice PE (84x84x21)
+            posée dans son socle, dessus (micro/LED/bouton) dégagé
+   base   : Pi 5 nu + Active Cooler, ports, anneau LED, logo
+   arrière: rail 2020/2040 (2x écrou T M5) + sortie câbles + entrées d'air
+   dessous: 4 vis M3 (plateau) + 4 pieds + fentes d'aération
 ```
 
-Dimensions extérieures : **189 × 94 × 32,5 mm** (hors rail : +6,5 mm).
-
-## Style (v2)
-
-- Coins très arrondis (R16) + chanfrein du rebord supérieur → silhouette organique.
-- Couvercle **deux tons** (ex. base gris clair / couvercle noir) posé avec un **jeu d'ombre** de 0,8 mm.
-- **Vis cachées** : 4 vis M3 insérées par le **dessous** dans des plots du couvercle (inserts laiton M3).
-- **Bandeau LED** en base de la façade (fente 40 × 3,5 mm) : ruban WS2812B collé au fond derrière la fente + diffuseur `lightbar.stl` imprimé en filament **translucide** et collé dans la fente.
-- **Logo maison gravé** (0,7 mm) sur la façade au-dessus de la baie Voice.
-- Grilles haut-parleur en **micro-perforations Ø1,8 mm** (pas 3,2 mm) sur les 3 côtés de la baie Voice — rendu "tissu".
-- Honeycomb fin du couvercle : hexagones de 4 mm (126 → ~230 cellules).
-- 4 **empreintes pour pieds caoutchouc** Ø12 × 1,5 mm sous le fond.
+Hauteur totale : **58 mm** (base 29 + plateau 3,5 + Voice 21 + ergots). Hors rail : +6,5 mm.
 
 ## Contenu / cotes
 
@@ -46,7 +31,7 @@ Dimensions extérieures : **189 × 94 × 32,5 mm** (hors rail : +6,5 mm).
 
 ```bash
 pip install trimesh manifold3d shapely        # + matplotlib pour les aperçus
-python3 boitier_pi5_voice.py                  # -> out/base.stl, couvercle.stl, lightbar.stl, apercu.stl
+python3 boitier_pi5_voice.py                  # -> out/base.stl, plateau.stl, diffuseur.stl, apercu.stl
 python3 render.py                              # -> preview/*.png
 ```
 
@@ -56,8 +41,9 @@ Paramètres en haut du fichier (`P = dict(...)`) : `extrusion`, `play` (jeu des 
 ## Impression (FDM)
 
 - **PETG** (proximité imprimante) ; PLA OK si Active Cooler actif. Buse 0,4 mm.
+- Couleurs : base **blanc/gris clair**, plateau **noir**, diffuseur **translucide**.
 - 0,20 mm (0,12 mm pour le couvercle et le lightbar), 3 périmètres, 20–25 % infill, 4 couches pleines.
-- **Aucun support** : base à plat, couvercle imprimé à l'envers (plots vers le haut), lightbar à plat.
+- **Aucun support** : base à plat, plateau imprimé à l'envers (plots et couronne vers le haut), diffuseur à plat.
 - Brim 5 mm sur la base, compensation pied d'éléphant 0,1–0,2 mm.
 - Couleurs : base gris clair/blanc, couvercle noir (ou l'inverse), lightbar translucide.
 - ~60–75 g de filament au total, ~2,5–3 h.
@@ -67,23 +53,23 @@ Paramètres en haut du fichier (`P = dict(...)`) : `extrusion`, `play` (jeu des 
 | Qté | Pièce |
 |---|---|
 | 4 | vis M2.5 × 8 (carte sur entretoises) |
-| 4 | inserts laiton M3 × 4 (dans les plots du couvercle) + 4 vis M3 × 10 (par le dessous) |
+| 4 | inserts laiton M3 × 4 (dans les plots du plateau) + 4 vis M3 × 10 (par le dessous) |
 | 2 | écrous en T M5 + vis M5 × 16 (profilé) |
 | 4 | pieds caoutchouc Ø12 × 2 mm (stick-on) |
 | 1 | alim USB-C PD 5 V/5 A (27 W) pour le Pi 5 |
-| 1 | ruban LED WS2812B ~50 mm (5 V/GND/data sur GPIO18 du Pi) + câble USB-C pour la Voice |
+| 1 | ruban LED WS2812B ~400 mm faire le tour de la base (5 V/GND/data sur GPIO18 du Pi) + câble USB-C pour la Voice |
 
 ## Montage
 
 1. Pi 5 vissé sur les 4 entretoises (Active Cooler clipsé, FAN branché).
-2. Voice PE dans sa baie (USB-C face à la cloison), son câble traverse la cloison → canal → sortie arrière.
-3. Ruban LED collé au fond contre la façade avant, derrière la fente ; diffuseur collé dans la fente.
-4. Couvercle posé, retourné, 4 vis M3 par le dessous. Pieds collés.
+2. Voice PE dans son socle sur le plateau (USB-C vers l'arrière), son câble traverse le plateau → canal → sortie arrière.
+3. Ruban LED collé au fond tout autour de la base, derrière la fente périphérique ; anneau diffuseur collé dans la fente.
+4. Plateau posé sur la base, retourné, 4 vis M3 par le dessous. Pieds collés.
 5. Rail arrière dans le profilé 2020/2040, serrage des 2 M5. Ports USB/Ethernet dégagés sur le côté droit.
 
 ## Notes
 
 - Bouton power du Pi 5 non déporté (ouvrir le couvercle ou shutdown GPIO).
-- `gpio_slot=True` ajoute une fente GPIO dans le couvercle.
+- `gpio_slot=True` ajoute une fente GPIO dans le plateau.
 - HAT M.2 ou plus haut : augmenter `h_int`.
 - Vérifier `vcgencmd measure_temp` en charge après montage.
